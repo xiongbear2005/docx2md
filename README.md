@@ -30,13 +30,13 @@ pip install python-docx lxml mammoth sympy pillow
 ### 基本用法
 
 ```bash
-python docx_to_md_with_formulas.py input.docx
+python docx2md.py input.docx
 ```
 
 ### 指定输出文件和图片目录
 
 ```bash
-python docx_to_md_with_formulas.py input.docx -o output.md -i images
+python docx2md.py input.docx -o output.md -i images
 ```
 
 ### 参数说明
@@ -49,7 +49,7 @@ python docx_to_md_with_formulas.py input.docx -o output.md -i images
 
 ### 示例1：基本转换
 ```bash
-python docx_to_md_with_formulas.py sample.docx
+python docx2md.py sample.docx
 # 输出：sample_with_formulas.md 和 images/ 目录
 ```
 

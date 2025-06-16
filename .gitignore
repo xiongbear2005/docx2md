@@ -53,6 +53,7 @@ output*.md
 images/
 *_output.md
 *_images/
+*.docx
 
 # Temporary files
 *.tmp

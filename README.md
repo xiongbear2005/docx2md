@@ -1,184 +1,103 @@
-# DOCX to Markdown Converter with Math Formula Support
+# DOCX ➜ Markdown 转换器（支持 LaTeX 数学公式）
 
-一个强大的DOCX到Markdown转换器，支持数学公式转换。将Microsoft Word文档中的文本、图片、表格和数学公式完美转换为Markdown格式，公式自动转换为LaTeX格式。
+一个体积轻巧但功能强大的脚本，能将 Microsoft Word **.docx** 文档转换为友好的 **Markdown**，并保留：
 
-## ✨ 功能特性
+- 🖋️ 文字 & 标题
+- 🖼️ 内嵌图片
+- 📊 表格
+- 🧮 数学公式（自动转换为 **LaTeX**）
 
-- 📝 **完整内容转换**：支持文本、图片、表格的完整转换
-- 🧮 **数学公式支持**：将Word中的数学公式转换为LaTeX格式
-- 📍 **位置保持**：公式在文档中的位置与原文档保持一致
-- 🎯 **智能分类**：自动区分行内公式（`$...$`）和显示公式（`$$...$$`）
-- 🔧 **格式优化**：LaTeX命令格式规范，如 `\geq ` 后自动添加空格
-- 🖼️ **图片提取**：自动提取并保存图片到指定目录，使用绝对路径确保显示
-- 📊 **表格转换**：将Word表格转换为Markdown表格格式
-- 🚀 **高效处理**：支持大型文档的快速转换
+所有元素按照在 Word 中出现的顺序导出，生成的 Markdown 与原文档排版保持高度一致。
 
-## 🛠️ 安装要求
+---
 
-### 依赖包
+## ✨ 主要特性
+
+1. **完整内容转换**：文字、标题、表格、图片、公式依次处理，不遗漏任何部分。
+2. **OMML ➜ LaTeX**：自研转换器，支持分数、积分、求和、根号、矩阵、重音、希腊字母等。
+3. **行内 / 显示公式智能判断**：复杂公式使用 `$$ … $$`，简单公式使用 `$ … $` 包裹。
+4. **图片提取**：所有图片保存到自定义目录，并在 Markdown 中以**绝对路径**引用，确保可见性。
+5. **表格转换**：Word 表格 → Markdown 表格，自动调整列宽。
+6. **转换统计**：结束后输出图片数量、行内公式 / 显示公式数量等信息。
+7. **CLI & 库双模式**：既可命令行调用，也可在 Python 代码中直接调用函数。
+
+---
+
+## 🛠️ 安装
+
 ```bash
 pip install -r requirements.txt
 ```
 
-或手动安装：
-```bash
-pip install python-docx lxml mammoth sympy pillow
-```
+依赖包：`python-docx`、`Pillow`、`lxml`、`mammoth`、`sympy`（上述命令会一并安装）。
 
-## 🚀 快速开始
+---
 
-### 基本用法
+## 🚀 命令行用法
 
 ```bash
-python docx2md.py input.docx
+python docx2md.py 输入.docx [-o 输出.md] [-i 图片目录]
 ```
 
-### 指定输出文件和图片目录
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `输入.docx` | 待转换的 Word 文件 | — |
+| `-o, --output` | 输出 Markdown 路径 | `<输入文件名>_with_formulas.md` |
+| `-i, --image_dir` | 图片保存目录 | `images` |
+
+示例：
 
 ```bash
-python docx2md.py input.docx -o output.md -i images
+python docx2md.py 论文.docx -o 论文.md -i assets
 ```
 
-### 参数说明
-
-- `input_file`：输入的DOCX文件路径
-- `-o, --output`：输出Markdown文件路径（可选）
-- `-i, --image_dir`：保存图片的目录名（默认：`images`）
-
-## 📖 使用示例
-
-### 示例1：基本转换
-```bash
-python docx2md.py sample.docx
-# 输出：sample_with_formulas.md 和 images/ 目录
-```
-
-### 示例2：自定义输出
-```bash
-python docx2md.py document.docx -o result.md -i pictures
-# 输出：result.md 和 pictures/ 目录
-```
-
-## 🧮 数学公式支持
-
-### 支持的数学元素
-
-#### 基本运算
-- **分数**：`\frac{a}{b}`
-- **上标**：`x^{2}`
-- **下标**：`x_{1}`
-- **根号**：`\sqrt{x}`, `\sqrt[n]{x}`
-
-#### 高级运算
-- **积分**：`\int`, `\int_{a}^{b}`
-- **求和**：`\sum`, `\sum_{i=1}^{n}`
-- **乘积**：`\prod`
-- **极限**：`\lim`
-
-#### 希腊字母
-- **小写**：α, β, γ, δ, ε, θ, λ, μ, π, σ, τ, φ, ψ, ω
-- **大写**：Γ, Δ, Θ, Λ, Ξ, Π, Σ, Υ, Φ, Ψ, Ω
-
-#### 运算符和符号
-- **关系**：≤, ≥, ≠, ≈, ≡
-- **集合**：∈, ∉, ⊂, ⊆, ∪, ∩, ∅
-- **箭头**：→, ←, ↔, ⇒, ⇐, ⇔
-- **其他**：∞, ∂, ∇, ±, ×, ÷, ·
-
-### 转换示例
-
-**输入（Word文档）**：包含数学公式的Word文档
-
-**输出（Markdown）**：
-```markdown
-在传统的MoE架构中，给定输入 $x$，门控网络 $G(x)$ 会输出一个权重向量 $p=[p_1,p_2,…,p_n]$。
-
-复杂公式将显示为：
-$$
-Attention(Q,K,V) = softmax(\frac{QK^T}{\sqrt{d_k}})V
-$$
-```
-
-## 📊 转换统计
-
-转换完成后，程序会显示详细统计信息：
+转换结束后将看到类似输出：
 
 ```
-Markdown file saved to: output.md
-Images saved to: images/
-Total images found: 19
+Markdown file saved to: 论文.md
+Images saved to: assets/
+Total images found: 12
 Formula conversion completed.
-
 Conversion Statistics:
   - Inline formulas: 64
   - Display formulas: 19
   - Total formulas: 83
 ```
 
-## 🖼️ 查看建议
+---
 
-为了获得最佳的数学公式渲染效果，推荐使用以下Markdown查看器：
+## 🐍 代码中调用
 
-- **Visual Studio Code** + "Markdown Preview Enhanced" 扩展
-- **Typora** Markdown编辑器
-- **Jupyter Notebook**
-- **在线查看器**：StackEdit、Dillinger
+```python
+from docx2md import docx_to_markdown_with_formulas
 
-## 🔧 进一步处理
-
-### 转换为PDF
-```bash
-pandoc output.md -o document.pdf
+docx_to_markdown_with_formulas(
+    "输入.docx",          # Word 文件
+    "输出.md",           # 目标 Markdown
+    image_dir="images"   # 图片目录
+)
 ```
 
-### 转换为HTML
-```bash
-pandoc output.md -o document.html
-```
+---
 
 ## 📁 项目结构
 
 ```
-project/
-├── docx_to_md_with_formulas.py  # 主转换脚本
-├── omml_to_latex.py             # OMML到LaTeX转换器
-├── requirements.txt             # 依赖包列表
-├── input.docx                   # 示例输入文件
-└── README.md                    # 项目说明
+├── docx2md.py            # CLI & 函数入口
+├── omml_to_latex.py      # OMML ➜ LaTeX 转换器
+├── example.py            # 使用示例脚本
+├── requirements.txt      # 依赖列表
+└── README.md             # 当前说明文档
 ```
 
-## 🔍 工作原理
-
-1. **文档解析**：使用 `python-docx` 读取DOCX文档结构
-2. **内容提取**：按顺序提取文本、图片、表格和数学公式
-3. **公式转换**：使用自定义OMML到LaTeX转换器处理数学公式
-4. **格式优化**：优化LaTeX命令格式，添加适当空格
-5. **位置保持**：确保所有元素在Markdown中保持正确位置
-6. **文件生成**：生成Markdown文件和图片目录
-
-## ⚠️ 注意事项
-
-- 确保输入的DOCX文件没有损坏
-- 数学公式必须使用Word的公式编辑器创建
-- 复杂的格式可能无法完全保留
-- 建议在转换前备份原始文件
-- **图片路径**：转换器使用绝对路径引用图片，确保在任何位置打开Markdown文件都能正确显示图片
-
-## 🐛 故障排除
-
-### 常见问题
-
-1. **公式显示为 "[Math Formula]"**
-   - 检查DOCX文件是否包含有效的数学公式
-   - 确保公式是使用Word的公式编辑器创建的
-
-2. **图片无法显示**
-   - 检查图片目录路径是否正确
-   - 确保有足够的磁盘空间保存图片
-
-3. **转换失败**
-   - 检查是否安装了所有必需的依赖包
-   - 确保DOCX文件没有损坏
 ---
 
-**享受无缝的DOCX到Markdown转换体验！** 🎉
+## ⚠️ 已知限制
+
+- 仅支持使用 **Word 公式编辑器**（OMML）的公式，旧版 Equation 3.0 不支持。
+- 复杂版式（脚注、文本框、SmartArt 等）目前会被忽略。
+
+
+---
+
+祝转换愉快 🎉

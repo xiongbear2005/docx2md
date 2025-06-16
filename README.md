@@ -55,7 +55,7 @@ python docx2md.py sample.docx
 
 ### 示例2：自定义输出
 ```bash
-python docx_to_md_with_formulas.py document.docx -o result.md -i pictures
+python docx2md.py document.docx -o result.md -i pictures
 # 输出：result.md 和 pictures/ 目录
 ```
 

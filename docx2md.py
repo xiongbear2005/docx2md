@@ -166,6 +166,28 @@ def process_paragraph_with_math(paragraph, image_dir, image_id_counter, relation
     return result
 
 
+def print_xml_structure(element, level=0):
+    """Print the XML structure of an element for debugging."""
+    indent = "  " * level
+    tag = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+    attrs = []
+    for key, value in element.attrib.items():
+        key = key.split('}')[-1] if '}' in key else key
+        attrs.append(f"{key}='{value}'")
+    attrs_str = " ".join(attrs)
+    
+    if element.text and element.text.strip():
+        print(f"{indent}<{tag} {attrs_str}>{element.text.strip()}")
+    else:
+        print(f"{indent}<{tag} {attrs_str}>")
+    
+    for child in element:
+        print_xml_structure(child, level + 1)
+    
+    if element.tail and element.tail.strip():
+        print(f"{indent}{element.tail.strip()}")
+
+
 def process_paragraph_element_recursively(element):
     """Recursively process paragraph element to extract text and math in correct order."""
     result_parts = []
@@ -181,6 +203,8 @@ def process_paragraph_element_recursively(element):
                 result_parts.append(run_text)
 
         elif tag == 'oMath':  # Math element
+            # (debug prints removed)
+            
             latex_formula = omml_to_latex_basic(child)
             if latex_formula and latex_formula != "[Math Formula]":
                 # Determine if it's inline or display math
@@ -265,11 +289,17 @@ def docx_to_markdown_with_formulas(docx_path, output_md_path, image_dir="images"
     # Note: All images should be processed within paragraphs above
     # No need to check for remaining images as they are handled in paragraph processing
     
-    # Write to markdown file
-    with open(output_md_path, 'w', encoding='utf-8') as f:
-        f.write('\n\n'.join(md_content))
+    # Write to markdown file - ensure UTF-8 encoding
+    try:
+        with open(output_md_path, 'w', encoding='utf-8') as f:
+            f.write('\n\n'.join(md_content))
+        print(f"Markdown file saved to: {output_md_path}")
+    except UnicodeEncodeError:
+        # Fallback to write with explicit error handling
+        with open(output_md_path, 'w', encoding='utf-8', errors='xmlcharrefreplace') as f:
+            f.write('\n\n'.join(md_content))
+        print(f"Markdown file saved to: {output_md_path} (with character encoding workaround)")
     
-    print(f"Markdown file saved to: {output_md_path}")
     print(f"Images saved to: {image_dir}/")
     print(f"Total images found: {image_id_counter[0] - 1}")
     print(f"Formula conversion completed.")
@@ -277,6 +307,11 @@ def docx_to_markdown_with_formulas(docx_path, output_md_path, image_dir="images"
     print(f"  - Inline formulas: {formula_count['inline']}")
     print(f"  - Display formulas: {formula_count['display']}")
     print(f"  - Total formulas: {formula_count['inline'] + formula_count['display']}")
+
+    # # Save a debug copy with BOM for troubleshooting encoding issues
+    # with open(output_md_path + '.debug', 'w', encoding='utf-8-sig') as f:
+    #     f.write('\n\n'.join(md_content))
+    # print(f"Debug copy with BOM saved to: {output_md_path}.debug")
 
 
 def main():

@@ -20,7 +20,8 @@ class OmmlToLatexConverter:
             'ν': '\\nu', 'ξ': '\\xi', 'ο': 'o', 'π': '\\pi',
             'ρ': '\\rho', 'σ': '\\sigma', 'τ': '\\tau', 'υ': '\\upsilon',
             'φ': '\\phi', 'χ': '\\chi', 'ψ': '\\psi', 'ω': '\\omega',
-            
+            'ϕ': '\\phi',  # Alternative phi
+
             # Capital Greek letters
             'Α': 'A', 'Β': 'B', 'Γ': '\\Gamma', 'Δ': '\\Delta',
             'Ε': 'E', 'Ζ': 'Z', 'Η': 'H', 'Θ': '\\Theta',
@@ -28,29 +29,39 @@ class OmmlToLatexConverter:
             'Ν': 'N', 'Ξ': '\\Xi', 'Ο': 'O', 'Π': '\\Pi',
             'Ρ': 'P', 'Σ': '\\Sigma', 'Τ': 'T', 'Υ': '\\Upsilon',
             'Φ': '\\Phi', 'Χ': 'X', 'Ψ': '\\Psi', 'Ω': '\\Omega',
-            
+
             # Mathematical operators
             '∞': '\\infty', '∑': '\\sum', '∫': '\\int', '∂': '\\partial',
             '∇': '\\nabla', '∆': '\\Delta', '∏': '\\prod',
-            
+
             # Relations
             '≤': '\\leq', '≥': '\\geq', '≠': '\\neq', '≈': '\\approx',
-            '≡': '\\equiv', '∝': '\\propto', '∼': '\\sim',
-            
+            '≡': '\\equiv', '∝': '\\propto', '∼': '\\sim', '~': '\\sim',
+
             # Set theory
             '∈': '\\in', '∉': '\\notin', '⊂': '\\subset', '⊆': '\\subseteq',
             '⊃': '\\supset', '⊇': '\\supseteq', '∪': '\\cup', '∩': '\\cap',
             '∅': '\\emptyset', '∀': '\\forall', '∃': '\\exists',
-            
+
             # Arrows
             '→': '\\rightarrow', '←': '\\leftarrow', '↔': '\\leftrightarrow',
             '⇒': '\\Rightarrow', '⇐': '\\Leftarrow', '⇔': '\\Leftrightarrow',
             '↑': '\\uparrow', '↓': '\\downarrow', '↕': '\\updownarrow',
-            
+
             # Other symbols
             '±': '\\pm', '∓': '\\mp', '×': '\\times', '÷': '\\div',
             '·': '\\cdot', '∘': '\\circ', '√': '\\sqrt', '∝': '\\propto',
             '∠': '\\angle', '⊥': '\\perp', '∥': '\\parallel',
+            '−': '-', '–': '-', '—': '-',  # Various dash types
+
+            # Special letters and symbols
+            'ℒ': '\\mathcal{L}', 'ℰ': '\\mathcal{E}', 'ℱ': '\\mathcal{F}',
+            'ℋ': '\\mathcal{H}', 'ℐ': '\\mathcal{I}',
+            'ℳ': '\\mathcal{M}', 'ℕ': '\\mathbb{N}', 'ℙ': '\\mathbb{P}',
+            'ℚ': '\\mathbb{Q}', 'ℝ': '\\mathbb{R}', 'ℤ': '\\mathbb{Z}',
+            'ℂ': '\\mathbb{C}', 'ℍ': '\\mathbb{H}', 'ℬ': '\\mathcal{B}',
+            'ℭ': '\\mathcal{C}', 'ℯ': 'e', 'ℊ': '\\mathfrak{g}',
+            'ℎ': 'h', 'ℏ': '\\hbar', 'ℓ': '\\ell',
         }
     
     def convert_element(self, element):
@@ -194,7 +205,7 @@ class OmmlToLatexConverter:
         sub = ""
         sup = ""
         base = ""
-        
+
         for child in element:
             tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
             if tag == 'naryPr':
@@ -208,7 +219,7 @@ class OmmlToLatexConverter:
                 sup = self.convert_element(child)
             elif tag == 'e':
                 base = self.convert_element(child)
-        
+
         # Map common n-ary operators
         operator_map = {
             '∑': '\\sum',
@@ -219,9 +230,15 @@ class OmmlToLatexConverter:
             '⋁': '\\bigvee',
             '⋀': '\\bigwedge',
         }
-        
+
         latex_op = operator_map.get(char, char)
-        
+
+        # Clean up subscripts and superscripts
+        if sub:
+            sub = self.clean_subscript_notation(sub)
+        if sup:
+            sup = self.clean_superscript_notation(sup)
+
         if sub and sup:
             return f"{latex_op}_{{{sub}}}^{{{sup}}} {base}"
         elif sub:
@@ -230,6 +247,25 @@ class OmmlToLatexConverter:
             return f"{latex_op}^{{{sup}}} {base}"
         else:
             return f"{latex_op} {base}"
+
+    def clean_subscript_notation(self, text):
+        """Clean up subscript notation for better LaTeX output."""
+        import re
+
+        # Fix common patterns in subscripts
+        # (x,I,y) ∈ D -> (x,I,y) \in \mathcal{D}
+        text = re.sub(r'\(([^)]+)\)\s*∈\s*([A-Z])', r'(\\1) \\in \\mathcal{\\2}', text)
+        text = re.sub(r'\(([^)]+)\)\s*∈\s*\\mathcal\{([A-Z])\}', r'(\\1) \\in \\mathcal{\\2}', text)
+
+        # Fix set notation
+        text = re.sub(r'∈', r'\\in', text)
+
+        return text
+
+    def clean_superscript_notation(self, text):
+        """Clean up superscript notation for better LaTeX output."""
+        # Currently just return as-is, but can be extended
+        return text
     
     def convert_delimiter(self, element):
         """Convert delimiter element."""
@@ -363,6 +399,60 @@ class OmmlToLatexConverter:
         # Remove standalone # that aren't part of LaTeX commands
         text = re.sub(r'(?<!\\)#(?![a-zA-Z])', '', text)
 
+        # Fix common mathematical notation issues
+        text = self.fix_mathematical_notation(text)
+
+        return text
+
+    def fix_mathematical_notation(self, text):
+        """Fix common mathematical notation issues."""
+        import re
+
+        # Fix expectation notation: E_{...} -> \mathbb{E}_{...} (but avoid double replacement)
+        if '\\mathbb{E}' not in text:
+            text = re.sub(r'\bE_', r'\\mathbb{E}_', text)
+            text = re.sub(r'\bE\s*\[', r'\\mathbb{E}[', text)
+            text = re.sub(r'\{E\}', r'\\mathbb{E}', text)
+
+        # Fix max/min with subscripts: max_θ -> \operatorname*{max}_θ
+        text = re.sub(r'\bmax_', r'\\operatorname*{max}_', text)
+        text = re.sub(r'\bmin_', r'\\operatorname*{min}_', text)
+        text = re.sub(r'\barg\s*max_', r'\\operatorname*{arg\\,max}_', text)
+        text = re.sub(r'\barg\s*min_', r'\\operatorname*{arg\\,min}_', text)
+
+        # Fix underset max/min notation
+        text = re.sub(r'\\underset\{([^}]+)\}\{max\}', r'\\operatorname*{max}_{\1}', text)
+        text = re.sub(r'\\underset\{([^}]+)\}\{min\}', r'\\operatorname*{min}_{\1}', text)
+
+        # Fix sum notation with subscripts: _{...} -> \sum_{...}
+        text = re.sub(r'=-_\{([^}]+)\}', r'=-\\sum_{\1}', text)
+        text = re.sub(r'=_\{([^}]+)\}', r'=\\sum_{\1}', text)
+
+        # Fix KL divergence notation: KL(...||...) -> KL[...\parallel...]
+        text = re.sub(r'KL\s*\(([^)]+)\\parallel([^)]+)\)', r'KL[\1\\parallel\2]', text)
+        text = re.sub(r'KL\s*\(([^)]+)\|\|([^)]+)\)', r'KL[\1\\parallel\2]', text)
+        text = re.sub(r'KL\s*\(([^)]+)\)', r'KL[\1]', text)
+
+        # Fix conditional probability: p(y|x,I) -> p(y|x,I) (ensure proper | symbol)
+        text = re.sub(r'([a-zA-Z_]+)\s*\(([^|)]+)([|])([^)]+)\)', r'\1(\2|\4)', text)
+
+        # Fix calligraphic letters that might be missed
+        text = re.sub(r'\bL_', r'\\mathcal{L}_', text)
+        text = re.sub(r'\bD\b', r'\\mathcal{D}', text)
+
+        # Fix probability notation with subscripts
+        text = re.sub(r'p_([a-zA-Z])\(', r'p_{\1}(', text)
+
+        # Fix log notation
+        text = re.sub(r'\blog\s+', r'\\log ', text)
+
+        # Fix ∈ symbol with proper spacing
+        text = re.sub(r'\\in([A-Z])', r'\\in \\mathcal{\1}', text)
+
+        # Fix conditional probability in log: log{p}_{θ}(yx,I) -> \log p_{θ}(y|x,I)
+        text = re.sub(r'\\log\{\{p\}\}_\{([^}]+)\}\\left\(\s*yx,I\s*\\right\)', r'\\log p_{\1}(y|x,I)', text)
+        text = re.sub(r'\\log\{p\}_\{([^}]+)\}\\left\(\s*yx,I\s*\\right\)', r'\\log p_{\1}(y|x,I)', text)
+
         return text
 
     def add_spaces_after_latex_commands(self, text):
@@ -408,12 +498,58 @@ class OmmlToLatexConverter:
         # Remove standalone # characters that aren't part of LaTeX commands
         latex_text = re.sub(r'(?<!\\)#(?![a-zA-Z])', '', latex_text)
 
+        # Fix common mathematical notation issues
+        latex_text = self.fix_common_latex_issues(latex_text)
+
         # Add proper spacing after LaTeX commands
         latex_text = self.add_spaces_after_latex_commands(latex_text)
 
         # Clean up extra spaces and commas at the end
         latex_text = re.sub(r'\s*,\s*$', '', latex_text)
         latex_text = re.sub(r'\s+', ' ', latex_text).strip()
+
+        return latex_text
+
+    def fix_common_latex_issues(self, latex_text):
+        """Fix common LaTeX notation issues in the final output."""
+        import re
+
+        # Fix negative signs that should be minus signs
+        latex_text = re.sub(r'−', '-', latex_text)
+
+        # Fix probability notation: p_θ(y|x,I) -> p_{\theta}(y|x,I)
+        latex_text = re.sub(r'p_([a-zA-Z])\(', r'p_{\1}(', latex_text)
+        latex_text = re.sub(r'p_\{([^}]+)\}\(([^|)]+)\|([^)]+)\)', r'p_{\1}(\2|\3)', latex_text)
+
+        # Fix log notation: log p_θ -> \log p_{\theta} (avoid double backslash)
+        if '\\\\log' not in latex_text:
+            latex_text = re.sub(r'\blog\s+', r'\\log ', latex_text)
+
+        # Fix underset notation for max/min
+        latex_text = re.sub(r'\\underset\{([^}]+)\}\{max\}', r'\\operatorname*{max}_{\1}', latex_text)
+        latex_text = re.sub(r'\\underset\{([^}]+)\}\{min\}', r'\\operatorname*{min}_{\1}', latex_text)
+
+        # Fix expectation notation (avoid multiple \mathbb)
+        if '\\mathbb\\mathbb' in latex_text:
+            latex_text = re.sub(r'\\mathbb\\mathbb\{E\}', r'\\mathbb{E}', latex_text)
+            latex_text = re.sub(r'\\mathbb\\mathbb\\mathbb\{E\}', r'\\mathbb{E}', latex_text)
+
+        # Fix KL divergence brackets
+        latex_text = re.sub(r'KL\s*\(([^)]+)\)', r'KL[\1]', latex_text)
+
+        # Fix parallel symbol in KL divergence
+        latex_text = re.sub(r'([^\\])∥', r'\1\\parallel', latex_text)
+        latex_text = re.sub(r'^∥', r'\\parallel', latex_text)
+
+        # Fix calligraphic letters
+        latex_text = re.sub(r'\{ℒ\}', r'\\mathcal{L}', latex_text)
+        latex_text = re.sub(r'ℒ_', r'\\mathcal{L}_', latex_text)
+
+        # Fix double backslash issues in operatorname
+        latex_text = re.sub(r'\{\\\\operatorname\*\{max\}', r'{\\operatorname*{max}', latex_text)
+        latex_text = re.sub(r'\{\\\\operatorname\*\{min\}', r'{\\operatorname*{min}', latex_text)
+        latex_text = re.sub(r'\{\\\\operatorname\*\{arg\\,max\}', r'{\\operatorname*{arg\\,max}', latex_text)
+        latex_text = re.sub(r'\{\\\\operatorname\*\{arg\\,min\}', r'{\\operatorname*{arg\\,min}', latex_text)
 
         return latex_text
 

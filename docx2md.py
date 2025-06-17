@@ -6,7 +6,7 @@ from docx.oxml.text.paragraph import CT_P
 from docx.table import _Cell, Table
 from docx.text.paragraph import Paragraph
 import argparse
-from omml_to_latex import convert_omml_to_latex
+from docx2md.omml_to_latex import convert_omml_to_latex
 
 
 def save_image(rel, image_dir, image_id):
